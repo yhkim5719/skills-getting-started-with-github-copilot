@@ -18,24 +18,36 @@ client = TestClient(app_module.app)
 
 
 def test_unregister_participant_removes_email_from_activity():
+    # Arrange
+    activity_name = "Soccer Team"
+    email = "student@mergington.edu"
+
+    # Act
     signup_response = client.post(
-        "/activities/Soccer Team/signup?email=student@mergington.edu"
+        f"/activities/{activity_name}/signup",
+        params={"email": email},
     )
-    assert signup_response.status_code == 200
-
     unregister_response = client.delete(
-        "/activities/Soccer Team/participants/student@mergington.edu"
+        f"/activities/{activity_name}/participants/{email}"
     )
 
+    # Assert
+    assert signup_response.status_code == 200
     assert unregister_response.status_code == 200
-    assert unregister_response.json()["message"] == "Unregistered student@mergington.edu from Soccer Team"
-    assert "student@mergington.edu" not in app_module.activities["Soccer Team"]["participants"]
+    assert unregister_response.json()["message"] == f"Unregistered {email} from {activity_name}"
+    assert email not in app_module.activities[activity_name]["participants"]
 
 
 def test_unregister_participant_returns_error_when_not_found():
+    # Arrange
+    activity_name = "Soccer Team"
+    email = "unknown@mergington.edu"
+
+    # Act
     response = client.delete(
-        "/activities/Soccer Team/participants/unknown@mergington.edu"
+        f"/activities/{activity_name}/participants/{email}"
     )
 
+    # Assert
     assert response.status_code == 404
     assert response.json()["detail"] == "Participant not found"
